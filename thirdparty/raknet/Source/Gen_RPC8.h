@@ -178,16 +178,16 @@ typedef unsigned long long NaturalWord;
 typedef double         HardwareReal;  // could be changed to __float128 on AMD64/nonwin
 
 #elif defined ( __aarch64__ )
-typedef unsigned long long NaturalWord;
-typedef double HardwareReal;
+#define AUTO_RPC_ABI AUTO_RPC_ABI_AARCH64
 #define AUTO_RPC_AUTORPC_WORD 64
 #define AUTO_RPC_INT_REG_PARAMS 8
 #define AUTO_RPC_FLOAT_REG_PARAMS 8
+#define AUTO_RPC_PARAMETER_REFERENCE_THRESHOLD 0
 #define AUTO_RPC_INT_SHADOW_OF_FLOATS 0
 #define AUTO_RPC_ALLOC_SEPARATE_FLOATS 1
 #define AUTO_RPC_CREATE_FLOAT_MAP 0
-#define AUTO_RPC_PARAMETER_REFERENCE_THRESHOLD 0
-#define AUTO_RPC_ABI AUTO_RPC_ABI_AARCH64
+typedef unsigned long long NaturalWord;
+typedef double HardwareReal;
 
 #elif defined ( _PS3 )
 typedef double HardwareReal;
