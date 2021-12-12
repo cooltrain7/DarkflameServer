@@ -416,7 +416,7 @@ int main(int argc, char** argv) {
 
 			if (framesSinceMasterStatus >= 200)
 			{
-				Game::logger->Log("WorldServer", "Finished loading world, ready up!\n");
+				Game::logger->Log("WorldServer", "Finished loading world with zone (%i), ready up!\n", Game::server->GetZoneID());
 
 				MasterPackets::SendWorldReady(Game::server, Game::server->GetZoneID(), Game::server->GetInstanceID());
 
@@ -487,7 +487,7 @@ int main(int argc, char** argv) {
 	if (Game::physicsWorld) Game::physicsWorld = nullptr;
 	if (Game::zoneManager) delete Game::zoneManager;
 
-	Game::logger->Log("Test", "Quitting\n");
+	Game::logger->Log("WorldServer", "Quitting\n");
 
 	Metrics::Clear();
 	Database::Destroy();
@@ -1205,7 +1205,7 @@ void WorldShutdownSequence()
 	auto t = std::chrono::high_resolution_clock::now();
 	auto ticks = 0;
 
-	printf("Attempting to shutdown world, max 10 seconds...");;
+    Game::logger->LogBasic("WorldServer", "Attempting to shutdown world, instance %i, max 10 seconds...", instanceID);
 
 	while (true)
 	{
