@@ -110,7 +110,7 @@ Packet* dServer::ReceiveFromMaster() {
 		}
 	
 		if (packet->data[0] == ID_CONNECTION_REQUEST_ACCEPTED) {
-			mLogger->Log("dServer", "Established connection to master\n");
+			mLogger->Log("dServer", "Established connection to master, zone (%i), instance (%i)\n",this->GetZoneID(), this->GetInstanceID());
 			mMasterConnectionActive = true;
 			mMasterSystemAddress = packet->systemAddress;
 			MasterPackets::SendServerInfo(this, packet);
