@@ -583,8 +583,7 @@ void SGCannon::StopGame(Entity *self, bool cancel) {
 
         Loot::GiveActivityLoot(player, self, GetGameID(self), self->GetVar<uint32_t>(TotalScoreVariable));
 
-        StopActivity(self, player->GetObjectID(), self->GetVar<uint32_t>(TotalScoreVariable),
-                self->GetVar<uint32_t>(MaxStreakVariable), percentage);
+        StopActivity(self, player->GetObjectID(), self->GetVar<uint32_t>(TotalScoreVariable),self->GetVar<uint32_t>(MaxStreakVariable), percentage);
         self->SetNetworkVar<bool>(AudioFinalWaveDoneVariable, true);
 
         // Give the player the model rewards they earned

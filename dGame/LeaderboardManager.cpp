@@ -74,6 +74,8 @@ void LeaderboardManager::SaveScore(LWOOBJID playerID, uint32_t gameID, uint32_t 
     if (character == nullptr)
         return;
 
+    Game::logger->LogDebug("LeaderboardManager", "Saving Score WOOOOOOOO!");
+
     auto* select = Database::CreatePreppedStmt("SELECT time, score FROM leaderboard WHERE character_id = ? AND game_id = ?;");
 
     select->setUInt64(1, character->GetID());
@@ -132,6 +134,10 @@ void LeaderboardManager::SaveScore(LWOOBJID playerID, uint32_t gameID, uint32_t 
         statement->setInt(4, gameID);
         statement->execute();
 
+        std::stringstream ss;
+        ss << "Updated score for " << character->GetID() << " in game " << gameID << " to " << score;
+        Game::logger->LogDebug("LeaderboardManager", ss.str());
+
         delete statement;
     } else {
         auto* statement = Database::CreatePreppedStmt("INSERT INTO leaderboard (character_id, game_id, time, score) VALUES (?, ?, ?, ?);");
@@ -140,6 +146,10 @@ void LeaderboardManager::SaveScore(LWOOBJID playerID, uint32_t gameID, uint32_t 
         statement->setInt(3, time);
         statement->setInt(4, score);
         statement->execute();
+
+        std::stringstream ss;
+        ss << "Inserted score for " << character->GetID() << " in game " << gameID << " to " << score;
+        Game::logger->LogDebug("LeaderboardManager", ss.str());
 
         delete statement;
     }

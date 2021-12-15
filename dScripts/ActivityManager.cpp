@@ -30,8 +30,7 @@ void ActivityManager::SetActivityScore(Entity *self, LWOOBJID playerID, uint32_t
     SetActivityValue(self, playerID, 0, score);
 }
 
-void ActivityManager::SetActivityValue(Entity *self, const LWOOBJID playerID, const uint32_t valueIndex,
-                                       const float_t value) {
+void ActivityManager::SetActivityValue(Entity *self, const LWOOBJID playerID, const uint32_t valueIndex, const float_t value) {
     auto* sac = self->GetComponent<ScriptedActivityComponent>();
     if (sac == nullptr)
         return;
@@ -47,8 +46,7 @@ float_t ActivityManager::GetActivityValue(Entity *self, const LWOOBJID playerID,
     return sac->GetActivityValue(playerID, valueIndex);
 }
 
-void ActivityManager::StopActivity(Entity *self, const LWOOBJID playerID, const uint32_t score,
-                                   const uint32_t value1, const uint32_t value2, bool quit) {
+void ActivityManager::StopActivity(Entity* self, const LWOOBJID playerID, const uint32_t score, const uint32_t param1, const uint32_t param2, const uint32_t param3, const uint32_t param4, bool quit) {
     int32_t gameID = 0;
     
     auto* sac = self->GetComponent<ScriptedActivityComponent>();
@@ -59,6 +57,10 @@ void ActivityManager::StopActivity(Entity *self, const LWOOBJID playerID, const 
         gameID = sac->GetActivityID();
     }
 
+    std::stringstream ss;
+    ss << "Stopping Activity for " << playerID << " in game " << gameID << " with score " << score << " and param1:" << param1 << " and param2" << param2;
+    Game::logger->LogDebug("ActivityManager", ss.str());
+
     if (quit) {
         UpdatePlayer(self, playerID, true);
     } else {
@@ -67,22 +69,19 @@ void ActivityManager::StopActivity(Entity *self, const LWOOBJID playerID, const 
             return;
 
         SetActivityScore(self, playerID, score);
-        SetActivityValue(self, playerID, 1, value1);
-        SetActivityValue(self, playerID, 2, value2);
+        SetActivityValue(self, playerID, 1, param1);
+        SetActivityValue(self, playerID, 2, param2);
 
         Loot::GiveActivityLoot(player, self, gameID, CalculateActivityRating(self, playerID));
 
         // Save the new score to the leaderboard and show the leaderboard to the player
         LeaderboardManager::SaveScore(playerID, gameID, score, value1);
-        const auto* leaderboard = LeaderboardManager::GetLeaderboard(gameID, InfoType::Standings,
-                                                                     false, player->GetObjectID());
+        const auto* leaderboard = LeaderboardManager::GetLeaderboard(gameID, InfoType::Standings,false, player->GetObjectID());
         GameMessages::SendActivitySummaryLeaderboardData(self->GetObjectID(), leaderboard, player->GetSystemAddress());
         delete leaderboard;
 
         // Makes the leaderboard show up for the player
-        GameMessages::SendNotifyClientObject(self->GetObjectID(), u"ToggleLeaderBoard",
-                                             gameID,0, playerID, "",
-                                             player->GetSystemAddress());
+        GameMessages::SendNotifyClientObject(self->GetObjectID(), u"ToggleLeaderBoard",gameID,0, playerID, "", player->GetSystemAddress());
 
         if (sac != nullptr) {
             sac->PlayerRemove(player->GetObjectID());
@@ -119,8 +118,7 @@ void ActivityManager::GetLeaderboardData(Entity *self, const LWOOBJID playerID, 
     LeaderboardManager::SendLeaderboard(activityID, Standings, false, self->GetObjectID(), playerID);
 }
 
-void ActivityManager::ActivityTimerStart(Entity *self, const std::string& timerName, const float_t updateInterval,
-                                         const float_t stopTime) {
+void ActivityManager::ActivityTimerStart(Entity *self, const std::string& timerName, const float_t updateInterval, const float_t stopTime) {
     auto* timer = new ActivityTimer { timerName, updateInterval, stopTime };
     activeTimers.push_back(timer);
 
