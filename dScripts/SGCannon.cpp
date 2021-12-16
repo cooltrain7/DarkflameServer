@@ -65,8 +65,7 @@ void SGCannon::OnPlayerLoaded(Entity *self, Entity *player) {
                                  true, true, true, true, true, true, true);*/
 }
 
-void SGCannon::OnFireEventServerSide(Entity *self, Entity *sender, std::string args, int32_t param1, int32_t param2,
-                                     int32_t param3) {
+void SGCannon::OnFireEventServerSide(Entity *self, Entity *sender, std::string args, int32_t param1, int32_t param2, int32_t param3) {
     Script::OnFireEventServerSide(self, sender, args, param1, param2, param3);
 }
 
@@ -519,6 +518,7 @@ void SGCannon::PlaySceneAnimation(Entity* self, const std::u16string& animationN
 
     if (onCannon) {
         GameMessages::SendPlayAnimation(self, animationName, priority);
+        Game::logger->LogDebug("CT-SGCannon", "Play Animation - " + GeneralUtils::UTF16ToWTF8(animationName) + "\n");
     }
 
     if (onPlayer) {
@@ -559,6 +559,10 @@ void SGCannon::StopGame(Entity *self, bool cancel) {
             percentage = misses / fired;
         }
 
+        std::stringstream ss;
+        ss << "Stopped Game  f: " << fired << " m: " << misses << " p: " << percentage<<"\n";
+        Game::logger->LogDebug("CT-SGCannon", ss.str());
+
         auto* missionComponent = player->GetComponent<MissionComponent>();
         
         if (self->GetVar<uint32_t>(TotalScoreVariable) >= 25000)
@@ -579,10 +583,10 @@ void SGCannon::StopGame(Entity *self, bool cancel) {
                 self->GetObjectID(),
                 "performact_score"
             );
+            //missionComponent->Progress(MissionTaskType::MISSION_TASK_TYPE_MINIGAME,self->GetVar<uint32_t>(CurrentStreakVariable),self->GetObjectID());
         }
 
         Loot::GiveActivityLoot(player, self, GetGameID(self), self->GetVar<uint32_t>(TotalScoreVariable));
-
         StopActivity(self, player->GetObjectID(), self->GetVar<uint32_t>(TotalScoreVariable),self->GetVar<uint32_t>(MaxStreakVariable), percentage);
         self->SetNetworkVar<bool>(AudioFinalWaveDoneVariable, true);
 
@@ -626,6 +630,14 @@ void SGCannon::StopGame(Entity *self, bool cancel) {
     ResetVars(self);
 }
 
+void SGCannon::OnShootingGalleryFire(Entity* self, const std::string& msg) {
+    Game::logger->LogDebug("CT-SGCannon", "PPPPPEEEEEEEEEEEEEEEEEEEEEWWWW!\n");
+}
+
+void SGCannon::OnActivityNotify(Entity* self, const std::string& msg) {
+    Game::logger->LogDebug("CT-SGCannon", "ACTIIIIVITYYYY BROOO\n");
+}
+
 void SGCannon::RegisterHit(Entity* self, Entity* target, const std::string& timerName) 
 {
     const auto& spawnInfo = target->GetVar<SGEnemy>(u"SpawnData");
@@ -633,11 +645,12 @@ void SGCannon::RegisterHit(Entity* self, Entity* target, const std::string& time
     if (spawnInfo.respawns)
     {
         const auto respawnTime = GeneralUtils::GenerateRandomNumber<float_t>(spawnInfo.minRespawnTime, spawnInfo.maxRespawnTime);
-
         ActivityTimerStart(self, timerName, respawnTime, respawnTime);
     }
 
     int score = spawnInfo.score;
+
+    Game::logger->LogDebug("CT-SGCannon", "Hit ship score %i\n",score);
 
     if (score > 0) {
         score += score * GetCurrentBonus(self);
@@ -651,7 +664,9 @@ void SGCannon::RegisterHit(Entity* self, Entity* target, const std::string& time
         }
     }
     else {
-        if (!self->GetVar<bool>(SuperChargeActiveVariable)) {
+
+        //We hit a friendly ship
+        if (self->GetVar<bool>(SuperChargeActiveVariable)) {
             self->SetVar<uint32_t>(u"m_curStreak", 0);
         }
 
@@ -662,9 +677,7 @@ void SGCannon::RegisterHit(Entity* self, Entity* target, const std::string& time
 
     auto scScore = self->GetVar<uint32_t>(TotalScoreVariable) - lastSuperTotal;
 
-    Game::logger->Log("SGCannon", "LastSuperTotal: %i, scScore: %i, constants.chargedPoints: %i\n", 
-        lastSuperTotal, scScore, constants.chargedPoints
-    );
+    Game::logger->Log("SGCannon", "LastSuperTotal: %i, scScore: %i, constants.chargedPoints: %i\n", lastSuperTotal, scScore, constants.chargedPoints);
 
     if (!self->GetVar<bool>(SuperChargeActiveVariable) && scScore >= constants.chargedPoints && score >= 0) {
         StartChargedCannon(self);
@@ -718,6 +731,7 @@ void SGCannon::UpdateStreak(Entity* self)
         }
         else {
             self->SetVar<float_t>(u"StreakBonus", streakBonus);
+            self->SetNetworkVar<bool>(u"HideStreak",true);
             self->SetNetworkVar<bool>(u"UnMarkAll", true);
         }
     }

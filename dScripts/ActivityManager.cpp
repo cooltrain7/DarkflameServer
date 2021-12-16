@@ -46,7 +46,7 @@ float_t ActivityManager::GetActivityValue(Entity *self, const LWOOBJID playerID,
     return sac->GetActivityValue(playerID, valueIndex);
 }
 
-void ActivityManager::StopActivity(Entity* self, const LWOOBJID playerID, const uint32_t score, const uint32_t param1, const uint32_t param2, const uint32_t param3, const uint32_t param4, bool quit) {
+void ActivityManager::StopActivity(Entity* self, const LWOOBJID playerID, const uint32_t score, const uint32_t value1, const uint32_t value2, const uint32_t value3, const uint32_t value4, bool quit) {
     int32_t gameID = 0;
     
     auto* sac = self->GetComponent<ScriptedActivityComponent>();
@@ -58,8 +58,8 @@ void ActivityManager::StopActivity(Entity* self, const LWOOBJID playerID, const 
     }
 
     std::stringstream ss;
-    ss << "Stopping Activity for " << playerID << " in game " << gameID << " with score " << score << " and param1:" << param1 << " and param2" << param2;
-    Game::logger->LogDebug("ActivityManager", ss.str());
+    ss << "Stopping Activity for " << playerID << " in game " << gameID << " with score " << score << " P1:" << value1 << " P2:" << value2 << " P3:" << value3 << " P4:" << value4 << "\n";
+    Game::logger->LogDebug("CT-ActivityManager", ss.str());
 
     if (quit) {
         UpdatePlayer(self, playerID, true);
@@ -69,8 +69,10 @@ void ActivityManager::StopActivity(Entity* self, const LWOOBJID playerID, const 
             return;
 
         SetActivityScore(self, playerID, score);
-        SetActivityValue(self, playerID, 1, param1);
-        SetActivityValue(self, playerID, 2, param2);
+        SetActivityValue(self, playerID, 1, value1);
+        SetActivityValue(self, playerID, 2, value2);
+        SetActivityValue(self, playerID, 3, value3);
+        SetActivityValue(self, playerID, 4, value4);
 
         Loot::GiveActivityLoot(player, self, gameID, CalculateActivityRating(self, playerID));
 

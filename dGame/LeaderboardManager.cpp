@@ -74,82 +74,101 @@ void LeaderboardManager::SaveScore(LWOOBJID playerID, uint32_t gameID, uint32_t 
     if (character == nullptr)
         return;
 
-    Game::logger->LogDebug("LeaderboardManager", "Saving Score WOOOOOOOO!");
-
-    auto* select = Database::CreatePreppedStmt("SELECT time, score FROM leaderboard WHERE character_id = ? AND game_id = ?;");
+    auto* select = Database::CreatePreppedStmt("SELECT time, score, play_count FROM leaderboard WHERE character_id = ? AND game_id = ?;");
 
     select->setUInt64(1, character->GetID());
     select->setInt(2, gameID);
 
-    auto any = false;
+    auto isFirstPlay = true;
+    auto isHighScore = false;
+    auto isScoreBased = false;
+    auto isTimeBased = false;
     auto* result = select->executeQuery();
     auto leaderboardType = GetLeaderboardType(gameID);
 
-    // Check if the new score is a high score
-    while (result->next()) {
-        any = true;
+    uint32_t storedplaycount = 0;
 
+    //Check if we have a new high score
+    while (result->next()) {
+        
+        isFirstPlay = false;
+        
         const auto storedTime = result->getInt(1);
         const auto storedScore = result->getInt(2);
-        auto highscore = true;
+        storedplaycount = result->getInt(3);
 
         switch (leaderboardType) {
             case ShootingGallery:
-                if (score <= storedScore)
-                    highscore = false;
+                if (score > storedScore)
+                    isHighScore = true;
+                    isScoreBased = true;
                 break;
             case Racing:
+                if (time < storedTime)
+                    isHighScore = true;
             case MonumentRace:
-                if (time > storedTime)
-                    highscore = false;
+                if (time < storedTime)
+                    isHighScore = true;
                 break;
             case FootRace:
-                if (time <= storedTime)
-                    highscore = false;
+                if (time < storedTime)
+                    isHighScore = true;
                 break;
             case Survival:
             case SurvivalNS:
-                if (score < storedScore || time >= storedTime)
-                    highscore = false;
+                if (score > storedScore || time < storedTime)
+                    isHighScore = true;
+                    isScoreBased = true;
+                    isTimeBased = true;
                 break;
-            default:
-                highscore = false;
-        }
-
-        if (!highscore) {
-            delete select;
-            delete result;
-            return;
         }
     }
 
     delete select;
     delete result;
 
-    if (any) {
-        auto* statement = Database::CreatePreppedStmt("UPDATE leaderboard SET time = ?, score = ? WHERE character_id = ? AND game_id = ?");
-        statement->setInt(1, time);
-        statement->setInt(2, score);
-        statement->setUInt64(3, character->GetID());
-        statement->setInt(4, gameID);
-        statement->execute();
-
-        std::stringstream ss;
-        ss << "Updated score for " << character->GetID() << " in game " << gameID << " to " << score;
-        Game::logger->LogDebug("LeaderboardManager", ss.str());
-
-        delete statement;
-    } else {
-        auto* statement = Database::CreatePreppedStmt("INSERT INTO leaderboard (character_id, game_id, time, score) VALUES (?, ?, ?, ?);");
+    if (isFirstPlay) {
+        auto* statement = Database::CreatePreppedStmt("INSERT INTO leaderboard (character_id, game_id, time, score, play_count) VALUES (?, ?, ?, ?, ?);");
         statement->setUInt64(1, character->GetID());
         statement->setInt(2, gameID);
         statement->setInt(3, time);
         statement->setInt(4, score);
+        statement->setInt(5, 1); //Play count will always be 1 for the first time
         statement->execute();
 
         std::stringstream ss;
-        ss << "Inserted score for " << character->GetID() << " in game " << gameID << " to " << score;
-        Game::logger->LogDebug("LeaderboardManager", ss.str());
+        ss << "Inserted score for " << character->GetID() << " in game " << gameID << " to " << score << "\n";
+        Game::logger->LogDebug("CT-LeaderboardManager", ss.str());
+
+        delete statement;
+    } else {
+
+        //Build our SQL query for score, time or both
+        std::stringstream queryString;
+        queryString << "UPDATE leaderboard SET";
+        if (isHighScore) {
+            if (isScoreBased) {
+                queryString << " score = "<< score <<",";
+            }
+            if (isTimeBased) {
+                queryString << " time = "<< time <<",";
+            }
+        }
+
+         //We always want to update the play count and the last played time
+        queryString << " play_count = ?, last_played = current_timestamp WHERE character_id = ? AND game_id = ?;\n";
+
+        Game::logger->LogDebug("CT-LeaderboardManager", queryString.str());
+
+        auto* statement = Database::CreatePreppedStmt(queryString.str());
+        statement->setInt(1, storedplaycount + 1);
+        statement->setUInt64(2, character->GetID());
+        statement->setInt(3, gameID);
+        statement->execute();
+
+        std::stringstream ss;
+        ss << "Updated score for " << character->GetID() << " in game " << gameID << " to " << score << " count " << storedplaycount + 1 << "\n";
+        Game::logger->LogDebug("CT-LeaderboardManager", ss.str());
 
         delete statement;
     }
