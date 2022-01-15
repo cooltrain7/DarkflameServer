@@ -422,7 +422,7 @@ void SGCannon::SpawnNewModel(Entity *self) {
 
             if (lootMatrix != 0) {
                 std::unordered_map<LOT, int32_t> toDrop = {};
-                Loot::CalculateLootMatrix(lootMatrix, player, toDrop);
+                toDrop = LootGenerator::Instance().RollLootMatrix(player, lootMatrix);
 
                 for (auto drop : toDrop) {
                     rewardModel->OnFireEventServerSide(self, ModelToBuildEvent, drop.first);
@@ -586,8 +586,10 @@ void SGCannon::StopGame(Entity *self, bool cancel) {
             //missionComponent->Progress(MissionTaskType::MISSION_TASK_TYPE_MINIGAME,self->GetVar<uint32_t>(CurrentStreakVariable),self->GetObjectID());
         }
 
-        Loot::GiveActivityLoot(player, self, GetGameID(self), self->GetVar<uint32_t>(TotalScoreVariable));
-        StopActivity(self, player->GetObjectID(), self->GetVar<uint32_t>(TotalScoreVariable),self->GetVar<uint32_t>(MaxStreakVariable), percentage);
+        LootGenerator::Instance().GiveActivityLoot(player, self, GetGameID(self), self->GetVar<uint32_t>(TotalScoreVariable));
+        StopActivity(self, player->GetObjectID(), self->GetVar<uint32_t>(TotalScoreVariable),
+        
+		self->GetVar<uint32_t>(MaxStreakVariable), percentage);
         self->SetNetworkVar<bool>(AudioFinalWaveDoneVariable, true);
 
         // Give the player the model rewards they earned

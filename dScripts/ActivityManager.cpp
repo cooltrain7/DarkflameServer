@@ -74,7 +74,7 @@ void ActivityManager::StopActivity(Entity* self, const LWOOBJID playerID, const 
         SetActivityValue(self, playerID, 3, value3);
         SetActivityValue(self, playerID, 4, value4);
 
-        Loot::GiveActivityLoot(player, self, gameID, CalculateActivityRating(self, playerID));
+        LootGenerator::Instance().GiveActivityLoot(player, self, gameID, CalculateActivityRating(self, playerID));
 
         // Save the new score to the leaderboard and show the leaderboard to the player
         LeaderboardManager::SaveScore(playerID, gameID, score, value1);
