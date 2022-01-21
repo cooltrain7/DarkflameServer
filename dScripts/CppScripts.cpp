@@ -261,6 +261,7 @@
 #include "PersonalFortress.h"
 #include "PropertyDevice.h"
 #include "ImaginationBackpackHealServer.h"
+#include "LegoDieRoll.h"
 #include "BuccaneerValiantShip.h"
 
 // Survival scripts
@@ -680,7 +681,7 @@ CppScripts::Script* CppScripts::GetScript(Entity* parent, const std::string& scr
 	else if (scriptName == "scripts\\02_server\\Enemy\\AM\\L_AM_DARKLING_DRAGON.lua")
 		script = new AmNamedDarklingDragon();
 	else if (scriptName == "scripts\\02_server\\Enemy\\AM\\L_AM_DARKLING_APE.lua")
-		script = new AmNamedDarklingDragon();
+		script = new BaseEnemyApe();
 	else if (scriptName == "scripts\\02_server\\Map\\AM\\L_BLUE_X.lua")
 	    script = new AmBlueX();
 
@@ -775,8 +776,10 @@ CppScripts::Script* CppScripts::GetScript(Entity* parent, const std::string& scr
 	    script = new PropertyDevice();
 	else if (scriptName == "scripts\\02_server\\Map\\General\\L_IMAG_BACKPACK_HEALS_SERVER.lua")
 	    script = new ImaginationBackpackHealServer();
-        else if (scriptName == "scripts\\EquipmentScripts\\BuccaneerValiantShip.lua")
-            script = new BuccaneerValiantShip();
+	else if (scriptName == "scripts\\ai\\GENERAL\\L_LEGO_DIE_ROLL.lua")
+		script = new LegoDieRoll();
+  	else if (scriptName == "scripts\\EquipmentScripts\\BuccaneerValiantShip.lua")
+    	script = new BuccaneerValiantShip();
 
 	//Ignore these scripts:
 	else if (scriptName == "scripts\\02_server\\Enemy\\General\\L_SUSPEND_LUA_AI.lua")
